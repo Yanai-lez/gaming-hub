@@ -11,6 +11,9 @@
   "background_color": "#0d1021",
   "theme_color": "#0d1021",
   "categories": ["games"],
+  "related_applications": [
+    { "platform": "webapp", "url": "https://yanai-lez.github.io/gaming-hub/manifest.webmanifest" }
+  ],
   "icons": [
     { "src": "assets/icons/logo-icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "assets/icons/logo-icon-512.png", "sizes": "512x512", "type": "image/png" },

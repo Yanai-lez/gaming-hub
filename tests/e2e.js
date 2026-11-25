@@ -431,6 +431,16 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   const installOpen = await app.evaluate(() => document.getElementById('install-help').open || document.querySelectorAll('#install-steps li').length === 0);
   check('install button gives instructions or a prompt', installOpen);
   await app.evaluate(() => document.getElementById('install-help').close());
+  const shown = () => app.isVisible('#btn-install');
+  await app.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
+  check('install button disappears after installing', !await shown());
+  await app.reload();
+  check('install button stays hidden after reload', !await shown());
+  await app.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt', { cancelable: true })));
+  check('button returns when the browser offers installation again', await shown());
+  await app.evaluate(() => { const e = new Event('beforeinstallprompt', { cancelable: true }); e.prompt = () => {}; e.userChoice = Promise.resolve({ outcome: 'accepted' }); window.dispatchEvent(e); });
+  await app.click('#btn-install'); await sleep(100);
+  check('accepting the prompt hides the button', !await shown());
   await app.context().setOffline(true); await app.reload();
   check('works offline', await app.locator('.card').count() === 5 && await app.$$eval('.card img', a => a.every(i => i.complete && i.naturalWidth > 0)));
   await start(app, 'pong');

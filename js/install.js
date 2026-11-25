@@ -13,14 +13,27 @@
     return ['פתחו את האתר ב-Chrome או ב-Edge.', 'לחצו על סמל ההתקנה בשורת הכתובת, או פתחו את תפריט הדפדפן.', 'בחרו "התקנה".'];
   }
 
-  button.hidden = standalone();
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); prompt = e; button.hidden = false; });
-  window.addEventListener('appinstalled', () => { prompt = null; button.hidden = true; GH.app.toast('האפליקציה הותקנה'); });
+  /* A browser tab cannot see that it is standalone once installed, so the fact is remembered. */
+  const KEY = 'gaming-hub:installed';
+  function remember(installed) {
+    button.hidden = installed;
+    try { installed ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch (e) {}
+  }
+  function remembered() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+
+  if (standalone()) remember(true); else button.hidden = remembered();
+  /* Chrome on Android can also report an installation made earlier (see related_applications in the manifest). */
+  if (navigator.getInstalledRelatedApps)
+    navigator.getInstalledRelatedApps().then(apps => { if (apps.length) remember(true); }).catch(() => {});
+  /* The browser only offers installation when the app is not installed, e.g. after it was removed. */
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); prompt = e; if (!standalone()) remember(false); });
+  window.addEventListener('appinstalled', () => { prompt = null; remember(true); GH.app.toast('האפליקציה הותקנה'); });
   button.addEventListener('click', async () => {
     if (prompt) {
       const event = prompt; prompt = null;
       event.prompt();
-      await event.userChoice;
+      const choice = await event.userChoice;
+      if (choice && choice.outcome === 'accepted') remember(true);
       return;
     }
     const list = document.getElementById('install-steps');
