@@ -1,6 +1,6 @@
 # 🎮 Gaming Hub
 
-Five browser games in one site, written in plain HTML, CSS and JavaScript. No build step, no backend, no external files.
+Five browser games in one site (Hebrew, right-to-left interface), written in plain HTML, CSS and JavaScript. No build step, no backend, no external files.
 
 | Game | Highlights |
 |---|---|

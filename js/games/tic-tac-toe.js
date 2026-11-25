@@ -56,7 +56,7 @@
     let all = GH.storage.getStats('tic-tac-toe', {});
     const stats = () => Object.assign({}, blank, all[statKey]);
 
-    stage.innerHTML = '<div class="ttt"><div class="ttt-status" role="status"></div><div class="ttt-board" role="grid" aria-label="Tic-Tac-Toe board"></div><div class="ttt-actions"><button type="button" class="btn btn-accent" data-a="new">New game</button><button type="button" class="btn" data-a="reset">Reset stats</button></div></div>';
+    stage.innerHTML = '<div class="ttt"><div class="ttt-status" role="status"></div><div class="ttt-board" role="grid" aria-label="לוח איקס עיגול" dir="ltr"></div><div class="ttt-actions"><button type="button" class="btn btn-accent" data-a="new">משחק חדש</button><button type="button" class="btn" data-a="reset">איפוס נתונים</button></div></div>';
     const status = stage.querySelector('.ttt-status');
     const boardEl = stage.querySelector('.ttt-board');
     const resetBtn = stage.querySelector('[data-a=reset]');
@@ -69,8 +69,8 @@
 
     function hud() {
       const t = stats();
-      if (two) ctx.setHud([['X wins', t.w], ['O wins', t.l], ['Draws', t.d]]);
-      else ctx.setHud([['Wins', t.w], ['Losses', t.l], ['Draws', t.d], ['Streak', t.streak]]);
+      if (two) ctx.setHud([['ניצחונות X', t.w], ['ניצחונות O', t.l], ['תיקו', t.d]]);
+      else ctx.setHud([['ניצחונות', t.w], ['הפסדים', t.l], ['תיקו', t.d], ['רצף', t.streak]]);
     }
     const computerTurn = () => !two && s.turn === 'O' && !s.over;
 
@@ -78,7 +78,7 @@
       cells.forEach((c, i) => {
         const v = s.board[i];
         if (c.dataset.mark !== v) { c.dataset.mark = v; c.innerHTML = v ? MARK[v] : ''; }
-        c.setAttribute('aria-label', `Row ${Math.floor(i / 3) + 1}, column ${i % 3 + 1}: ${v || 'empty'}`);
+        c.setAttribute('aria-label', `שורה ${Math.floor(i / 3) + 1}, עמודה ${i % 3 + 1}: ${v || 'ריק'}`);
         c.setAttribute('aria-disabled', String(!!v || s.over || computerTurn()));
       });
     }
@@ -97,7 +97,7 @@
     }
 
     function announce() {
-      status.textContent = two ? `${s.turn}'s turn` : s.turn === 'X' ? 'Your turn (X)' : 'Computer is thinking…';
+      status.textContent = two ? `התור של ${s.turn}` : s.turn === 'X' ? 'התור שלכם (X)' : 'המחשב חושב…';
     }
 
     function think() {
@@ -109,7 +109,7 @@
       const t = stats();
       if (w.mark === 'X') { t.w++; t.streak++; } else if (w.mark === 'O') { t.l++; t.streak = 0; } else t.d++;
       all[statKey] = t; GH.storage.setStats('tic-tac-toe', all);
-      status.textContent = !w.mark ? "It's a draw" : two ? `${w.mark} wins!` : w.mark === 'X' ? 'You win!' : 'Computer wins';
+      status.textContent = !w.mark ? 'תיקו' : two ? `ניצחון ל-${w.mark}!` : w.mark === 'X' ? 'ניצחתם!' : 'המחשב ניצח';
       if (w.line) {
         w.line.forEach(i => cells[i].classList.add('winning'));
         const at = i => [50 + (i % 3) * 100, 50 + Math.floor(i / 3) * 100];
@@ -119,7 +119,7 @@
       GH.audio.sfx(!w.mark ? 'draw' : two || w.mark === 'X' ? 'win' : 'lose');
       if (!two) {
         GH.storage.updateBest('tic-tac-toe', t.streak);
-        GH.storage.addHistory('tic-tac-toe', t.streak, `${!w.mark ? 'Draw' : w.mark === 'X' ? 'Win' : 'Loss'}, ${difficulty}`);
+        GH.storage.addHistory('tic-tac-toe', t.streak, `${!w.mark ? 'תיקו' : w.mark === 'X' ? 'ניצחון' : 'הפסד'}, ${{ easy: 'קל', medium: 'בינוני', hard: 'קשה' }[difficulty]}`);
       }
       ctx.refreshSide(); render(); hud();
     }
@@ -139,11 +139,11 @@
     scope.on(stage.querySelector('[data-a=new]'), 'click', () => { GH.audio.sfx('click'); newRound(); });
     scope.on(resetBtn, 'click', () => {
       if (!s.resetArmed) {
-        s.resetArmed = true; resetBtn.textContent = 'Tap again to reset';
-        scope.wait(3000, () => { s.resetArmed = false; resetBtn.textContent = 'Reset stats'; });
+        s.resetArmed = true; resetBtn.textContent = 'לחצו שוב לאיפוס';
+        scope.wait(3000, () => { s.resetArmed = false; resetBtn.textContent = 'איפוס נתונים'; });
         return;
       }
-      s.resetArmed = false; resetBtn.textContent = 'Reset stats';
+      s.resetArmed = false; resetBtn.textContent = 'איפוס נתונים';
       all[statKey] = Object.assign({}, blank); GH.storage.setStats('tic-tac-toe', all); hud();
     });
     /* Digits follow the number-pad layout (7 8 9 on top); arrows move focus. */
@@ -165,14 +165,14 @@
   }
 
   GH.games.register({
-    id: 'tic-tac-toe', name: 'Tic-Tac-Toe', accent: '#ff8a5c', music: null, bestLabel: 'Best win streak',
-    description: 'Outsmart three computer opponents, or challenge a friend on one screen.',
-    howTo: 'Tap a square to place your mark. Number keys 1–9 follow the number pad.',
-    controls: [['Click / tap', 'Place a mark'], ['1–9', 'Squares, number-pad layout'], ['Arrows + Enter', 'Move and select'], ['N', 'New game'], ['Streak', 'Wins in a row against the computer; draws keep it']],
+    id: 'tic-tac-toe', name: 'איקס עיגול', accent: '#ff8a5c', music: null, bestLabel: 'רצף ניצחונות שיא',
+    description: 'נצחו את המחשב בשלוש רמות, או אתגרו חבר על אותו מסך.',
+    howTo: 'הקישו על משבצת כדי לסמן. המקשים 1–9 מסודרים כמו במקלדת הספרות.',
+    controls: [['לחיצה / הקשה', 'סימון משבצת'], ['1–9', 'משבצות, כמו במקלדת הספרות'], ['חצים + Enter', 'מעבר ובחירה'], ['N', 'משחק חדש'], ['רצף', 'ניצחונות ברצף מול המחשב; תיקו לא שובר אותו']],
     options: [
-      { key: 'mode', label: 'Opponent', default: 'cpu', choices: [['cpu', 'Computer'], ['two', 'Two players']] },
-      { key: 'difficulty', label: 'Computer level', default: 'medium', choices: [['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']] },
-      { key: 'first', label: 'Who starts', default: 'x', choices: [['x', 'X (you)'], ['o', 'O'], ['alternate', 'Take turns']] }
+      { key: 'mode', label: 'יריב', default: 'cpu', choices: [['cpu', 'מחשב'], ['two', 'שני שחקנים']] },
+      { key: 'difficulty', label: 'רמת המחשב', default: 'medium', choices: [['easy', 'קל'], ['medium', 'בינוני'], ['hard', 'קשה']] },
+      { key: 'first', label: 'מי מתחיל', default: 'x', choices: [['x', 'X (אתם)'], ['o', 'O'], ['alternate', 'לסירוגין']] }
     ],
     logic: { winner, chooseMove },
     create

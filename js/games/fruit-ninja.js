@@ -45,7 +45,7 @@
 
     function hud() {
       shownSecond = Math.ceil(s.left);
-      ctx.setHud([['Score', s.score], ['Time', shownSecond + 's'], ['Lives', '♥'.repeat(s.lives) || '0']]);
+      ctx.setHud([['ניקוד', s.score], ['שניות', shownSecond], ['חיים', '♥'.repeat(s.lives) || '0']]);
     }
 
     function launch(type, bomb) {
@@ -74,7 +74,7 @@
     function end(title) {
       if (s.over) return;
       s.over = true; hud(); draw();
-      ctx.gameOver({ score: s.score, note: `${duration}s round`, title, lines: [] });
+      ctx.gameOver({ score: s.score, note: `סבב של ${duration} שניות`, title, lines: [] });
     }
 
     function loseLife(x, y) {
@@ -82,7 +82,7 @@
       s.texts.push({ x, y, text: '✕', color: '#ff5d73', age: 0 });
       GH.audio.sfx('hurt'); vibrate(70);
       hud();
-      if (s.lives <= 0) end('Out of lives');
+      if (s.lives <= 0) end('נגמרו החיים');
     }
 
     function slice(item, dx, dy, stroke) {
@@ -110,7 +110,7 @@
       if (stroke.combo >= 3 && !s.over) {
         s.score += stroke.combo;
         const x = clamp(stroke.at.x, 90, view.width - 90);
-        s.texts.push({ x, y: stroke.at.y - 40, text: `${stroke.combo} COMBO +${stroke.combo}`, color: '#ffe15e', age: 0 });
+        s.texts.push({ x, y: stroke.at.y - 40, text: `קומבו ${stroke.combo}! בונוס ${stroke.combo}`, dir: 'rtl', color: '#ffe15e', age: 0 });
         GH.audio.sfx('combo'); hud();
       }
       stroke.combo = 0;
@@ -149,7 +149,7 @@
       s.trails = s.trails.filter(t => t.age < 0.16);
       for (const k of strokes.values()) { k.since += dt; if (k.combo && k.since > 0.28) bankCombo(k); }
       fx.update(dt);
-      if (!s.over && s.left <= 0) { strokes.forEach(bankCombo); end("Time's up"); return; }
+      if (!s.over && s.left <= 0) { strokes.forEach(bankCombo); end('נגמר הזמן'); return; }
       if (!s.over && Math.ceil(s.left) !== shownSecond) hud();
     }
 
@@ -197,9 +197,9 @@
         g.beginPath(); g.moveTo(t.ax, t.ay); g.lineTo(t.bx, t.by); g.stroke();
       }
       g.textAlign = 'center'; g.font = '900 26px system-ui, sans-serif';
-      for (const t of s.texts) { g.globalAlpha = Math.max(0, 1 - t.age / 0.9); g.fillStyle = t.color; g.fillText(t.text, t.x, t.y); }
+      for (const t of s.texts) { g.direction = t.dir || 'ltr'; g.globalAlpha = Math.max(0, 1 - t.age / 0.9); g.fillStyle = t.color; g.fillText(t.text, t.x, t.y); }
       g.globalAlpha = 1;
-      if (s.elapsed < 3 && !s.over) { g.fillStyle = '#fff'; g.font = '700 22px system-ui, sans-serif'; g.fillText(bombsOn ? 'Swipe the fruit, avoid bombs' : 'Swipe the fruit', W / 2, H * 0.25); }
+      if (s.elapsed < 3 && !s.over) { g.fillStyle = '#fff'; g.font = '700 22px system-ui, sans-serif'; g.direction = 'rtl'; g.fillText(bombsOn ? 'חתכו פירות, היזהרו מפצצות' : 'חתכו את הפירות', W / 2, H * 0.25); }
       g.restore();
     }
 
@@ -226,18 +226,18 @@
     return {
       state: s, view, launch: (i) => launch(FRUITS[i || 0], false),
       pause() { strokes.forEach(bankCombo); strokes.clear(); },
-      result: () => ({ score: s.score, note: `${duration}s round` })
+      result: () => ({ score: s.score, note: `סבב של ${duration} שניות` })
     };
   }
 
   GH.games.register({
-    id: 'fruit-ninja', name: 'Fruit Ninja', accent: '#ff5d8f', music: 'fruit', bestLabel: 'High score',
-    description: 'Slash flying fruit, chain combos and keep clear of the bombs.',
-    howTo: 'Swipe with a finger, or hold the mouse button and drag. Dropped fruit costs a life.',
-    controls: [['Swipe / drag', 'Slice fruit'], ['P / Esc', 'Pause'], ['Combo', '3+ fruit in one swipe adds a bonus'], ['Golden ★', 'Worth 5; safe to miss'], ['Bombs', 'Slicing one costs a life']],
+    id: 'fruit-ninja', name: 'נינג\'ת הפירות', accent: '#ff5d8f', music: 'fruit', bestLabel: 'שיא',
+    description: 'חתכו פירות מעופפים, צברו קומבואים והתרחקו מהפצצות.',
+    howTo: 'החליקו באצבע, או החזיקו את כפתור העכבר וגררו. פרי שנופל עולה בחיים.',
+    controls: [['החלקה / גרירה', 'חיתוך פירות'], ['P / Esc', 'השהיה'], ['קומבו', '3 פירות ומעלה בהחלקה אחת מזכים בבונוס'], ['פרי זהב ★', 'שווה 5; מותר לפספס'], ['פצצות', 'חיתוך פצצה עולה בחיים']],
     options: [
-      { key: 'time', label: 'Round length', default: '60', choices: [['60', '60 s'], ['90', '90 s'], ['120', '120 s']] },
-      { key: 'bombs', label: 'Bombs', default: 'on', choices: [['on', 'On'], ['off', 'Off']] }
+      { key: 'time', label: 'אורך הסבב', default: '60', choices: [['60', '60 שנ׳'], ['90', '90 שנ׳'], ['120', '120 שנ׳']] },
+      { key: 'bombs', label: 'פצצות', default: 'on', choices: [['on', 'פעיל'], ['off', 'כבוי']] }
     ],
     logic: { segmentHitsCircle },
     create

@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d1021">
-  <meta name="description" content="Gaming Hub: five browser games in one place. Space Invaders, Pong, Tic-Tac-Toe, Simon Says and Fruit Ninja.">
-  <title>Gaming Hub</title>
+  <meta name="description" content="מרכז המשחקים: חמישה משחקי דפדפן במקום אחד. פולשים מהחלל, פונג, איקס עיגול, סיימון אומר ונינג'ת הפירות.">
+  <title>מרכז המשחקים</title>
   <link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/home.css">
@@ -13,26 +13,26 @@
 </head>
 <body>
   <header class="topbar">
-    <button class="icon-btn" id="btn-home" type="button" aria-label="Back to home" title="Home" hidden></button>
+    <button class="icon-btn" id="btn-home" type="button" aria-label="חזרה לדף הבית" title="דף הבית" hidden></button>
     <a class="brand" href="#/">
       <img src="assets/icons/logo.svg" alt="" width="34" height="34">
-      <span id="brand-text">Gaming Hub</span>
+      <span id="brand-text">מרכז המשחקים</span>
     </a>
     <div class="topbar-actions">
-      <button class="icon-btn" id="btn-pause" type="button" aria-label="Pause" title="Pause (P)" hidden></button>
-      <button class="icon-btn" id="btn-mute" type="button" aria-label="Mute" title="Mute (M)"></button>
-      <button class="icon-btn" id="btn-fullscreen" type="button" aria-label="Fullscreen" title="Fullscreen (F)"></button>
-      <button class="icon-btn" id="btn-settings" type="button" aria-label="Settings" title="Settings"></button>
+      <button class="icon-btn" id="btn-pause" type="button" aria-label="השהיה" title="השהיה (P)" hidden></button>
+      <button class="icon-btn" id="btn-mute" type="button" aria-label="השתקה" title="השתקה (M)"></button>
+      <button class="icon-btn" id="btn-fullscreen" type="button" aria-label="מסך מלא" title="מסך מלא (F)"></button>
+      <button class="icon-btn" id="btn-settings" type="button" aria-label="הגדרות" title="הגדרות"></button>
     </div>
   </header>
 
   <main id="home" class="home">
     <section class="hero">
-      <h1>Five games.<br><span>One arcade.</span></h1>
-      <p>No sign-up, no downloads. Your high scores stay on this device.</p>
+      <h1>חמישה משחקים.<br><span>ארקייד אחד.</span></h1>
+      <p>בלי הרשמה ובלי הורדות. השיאים שלכם נשמרים במכשיר הזה.</p>
       <a class="btn btn-ghost" id="continue-link" href="#/" hidden></a>
     </section>
-    <section class="cards" id="cards" aria-label="Games"></section>
+    <section class="cards" id="cards" aria-label="משחקים"></section>
   </main>
 
   <main id="game" class="game" hidden>
@@ -47,22 +47,22 @@
   </main>
 
   <dialog id="settings" class="dialog" aria-labelledby="settings-title">
-    <h2 id="settings-title">Settings</h2>
-    <label class="row"><span>Mute everything</span><input type="checkbox" data-setting="muted"></label>
-    <label class="row"><span>Sound effects</span><input type="checkbox" data-setting="sfx"></label>
-    <label class="row"><span>Effects volume</span><input type="range" min="0" max="1" step="0.05" data-setting="sfxVolume"></label>
-    <label class="row"><span>Background music</span><input type="checkbox" data-setting="music"></label>
-    <label class="row"><span>Music volume</span><input type="range" min="0" max="1" step="0.05" data-setting="musicVolume"></label>
-    <label class="row"><span>Vibration (supported phones)</span><input type="checkbox" data-setting="vibration"></label>
-    <label class="row"><span>Screen shake and particles</span><input type="checkbox" data-setting="effects"></label>
+    <h2 id="settings-title">הגדרות</h2>
+    <label class="row"><span>השתקת הכול</span><input type="checkbox" data-setting="muted"></label>
+    <label class="row"><span>אפקטים קוליים</span><input type="checkbox" data-setting="sfx"></label>
+    <label class="row"><span>עוצמת האפקטים</span><input type="range" min="0" max="1" step="0.05" data-setting="sfxVolume"></label>
+    <label class="row"><span>מוזיקת רקע</span><input type="checkbox" data-setting="music"></label>
+    <label class="row"><span>עוצמת המוזיקה</span><input type="range" min="0" max="1" step="0.05" data-setting="musicVolume"></label>
+    <label class="row"><span>רטט (בטלפונים תומכים)</span><input type="checkbox" data-setting="vibration"></label>
+    <label class="row"><span>רעידות מסך וחלקיקים</span><input type="checkbox" data-setting="effects"></label>
     <div class="dialog-actions">
-      <button class="btn btn-danger" id="btn-reset" type="button">Erase saved data</button>
-      <button class="btn" id="btn-close-settings" type="button">Done</button>
+      <button class="btn btn-danger" id="btn-reset" type="button">מחיקת הנתונים</button>
+      <button class="btn" id="btn-close-settings" type="button">סיום</button>
     </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <noscript><p style="padding:24px">Gaming Hub needs JavaScript.</p></noscript>
+  <noscript><p style="padding:24px">האתר דורש JavaScript.</p></noscript>
 
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>

@@ -30,7 +30,9 @@
       paddle: { x: W / 2, w: level.width }, ball: { x: W / 2, y: 200, vx: 0, vy: 0 }, speed: level.speed
     };
 
-    const hud = () => ctx.setHud([['Score', s.score], ['Hits', s.hits], ['Speed', (s.speed / level.speed).toFixed(1) + '×'], ['Lives', '●'.repeat(s.lives) || '0']]);
+    const hud = () => ctx.setHud([['ניקוד', s.score], ['פגיעות', s.hits], ['מהירות', (s.speed / level.speed).toFixed(1) + '×'], ['חיים', '●'.repeat(s.lives) || '0']]);
+
+    const note = () => `${s.hits} פגיעות, ${{ easy: 'קל', medium: 'בינוני', hard: 'קשה' }[ctx.options.difficulty]}`;
 
     function resetBall() {
       s.ball = { x: s.paddle.x, y: PADDLE_Y - R - 1, vx: 0, vy: 0 };
@@ -69,7 +71,7 @@
         hud();
         if (s.lives <= 0) {
           s.over = true; draw();
-          ctx.gameOver({ score: s.score, note: `${s.hits} hits, ${ctx.options.difficulty}`, lines: [`${s.hits} paddle hits on ${ctx.options.difficulty}.`] });
+          ctx.gameOver({ score: s.score, note: note(), lines: [`פגיעות במחבט: ${s.hits}`] });
         } else {
           /* Ease off a little after a miss. */
           s.speed = Math.max(level.speed, s.speed - 5 * level.step);
@@ -112,7 +114,7 @@
       if (g.roundRect) g.roundRect(p.x - p.w / 2, PADDLE_Y, p.w, PADDLE_H, 7); else g.rect(p.x - p.w / 2, PADDLE_Y, p.w, PADDLE_H);
       g.fill(); g.shadowBlur = 0;
       fx.draw(g);
-      if (s.serve > 0 && !s.over) { g.fillStyle = '#fff'; g.font = '700 20px system-ui, sans-serif'; g.fillText('Get ready · tap or press Space', W / 2, H * 0.68); }
+      if (s.serve > 0 && !s.over) { g.fillStyle = '#fff'; g.font = '700 20px system-ui, sans-serif'; g.direction = 'rtl'; g.fillText('היכונו · הקישו או לחצו רווח', W / 2, H * 0.68); }
     }
 
     const steer = e => { if (!scope.paused) s.paddle.x = clamp(view.point(e).x, s.paddle.w / 2, W - s.paddle.w / 2); };
@@ -128,15 +130,15 @@
     resetBall(); hud();
     scope.loop(dt => { update(dt); draw(); });
 
-    return { state: s, pause() { keys.clear(); }, result: () => ({ score: s.score, note: `${s.hits} hits, ${ctx.options.difficulty}` }) };
+    return { state: s, pause() { keys.clear(); }, result: () => ({ score: s.score, note: note() }) };
   }
 
   GH.games.register({
-    id: 'pong', name: 'Pong', accent: '#3fffd0', music: 'pong', bestLabel: 'High score',
-    description: 'Angle every return with your paddle while the ball keeps getting faster.',
-    howTo: 'Drag or move the mouse to steer the paddle. Arrows or A/D also work.',
-    controls: [['Mouse / touch', 'Move or drag the paddle'], ['← → / A D', 'Move the paddle'], ['Space / tap', 'Serve early'], ['P / Esc', 'Pause'], ['Points', 'Per hit: Easy 1, Medium 2, Hard 3']],
-    options: [{ key: 'difficulty', label: 'Difficulty', default: 'medium', choices: [['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']] }],
+    id: 'pong', name: 'פונג', accent: '#3fffd0', music: 'pong', bestLabel: 'שיא',
+    description: 'כוונו כל החזרה עם המחבט בזמן שהכדור הולך ומאיץ.',
+    howTo: 'גררו או הזיזו את העכבר כדי להזיז את המחבט. אפשר גם בחצים או ב-A/D.',
+    controls: [['עכבר / מגע', 'הזזה או גרירה של המחבט'], ['← → / A D', 'הזזת המחבט'], ['רווח / הקשה', 'הגשה מיידית'], ['P / Esc', 'השהיה'], ['נקודות', 'לכל פגיעה: קל 1, בינוני 2, קשה 3']],
+    options: [{ key: 'difficulty', label: 'רמת קושי', default: 'medium', choices: [['easy', 'קל'], ['medium', 'בינוני'], ['hard', 'קשה']] }],
     bounceVelocity,
     create
   });

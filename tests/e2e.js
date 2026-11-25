@@ -71,6 +71,30 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
     await page.context().close();
   }
 
+  console.log('\n== hebrew ==');
+  const he = await open({ viewport: { width: 1200, height: 800 } });
+  check('page is Hebrew and right-to-left', await he.evaluate(() => document.documentElement.lang === 'he' && getComputedStyle(document.body).direction === 'rtl'));
+  /* Visible text on every screen: only key names may stay in Latin letters. */
+  const latin = () => he.evaluate(() => (document.body.innerText.match(/[A-Za-z]{2,}/g) || []).filter(w => !['Esc', 'Enter', 'JavaScript'].includes(w)));
+  const found = [...await latin()];
+  await he.click('#btn-settings'); found.push(...await latin()); await he.click('#btn-close-settings');
+  for (const id of IDS) {
+    await start(he, id); found.push(...await latin());
+    await he.evaluate(() => GH.app.current.state === 'playing' && document.querySelector('#btn-pause').click()); found.push(...await latin());
+    await he.click('#btn-menu'); found.push(...await latin());
+  }
+  check('no English text left on screen', found.length === 0, [...new Set(found)]);
+  await start(he, 'tic-tac-toe', { mode: 'two' });
+  const xs = await he.$$eval('.cell', c => c.map(e => e.getBoundingClientRect().x));
+  check('board keeps left-to-right cell order', xs[0] < xs[1] && xs[1] < xs[2]);
+  await start(he, 'space-invaders');
+  const bx = await he.$$eval('.pad button', c => c.map(e => e.getBoundingClientRect().x));
+  check('left arrow stays on the left', bx[0] < bx[1] && bx[1] < bx[2]);
+  await start(he, 'simon-says');
+  const px = await he.$$eval('.simon-pad', c => c.map(e => e.getBoundingClientRect().x));
+  check('Simon pads match the key layout', px[0] < px[1]);
+  await he.context().close();
+
   console.log('\n== shell ==');
   const page = await open({ viewport: { width: 1200, height: 800 } });
   await start(page, 'pong');
@@ -197,7 +221,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   await page.click('[data-a=new]');
   check('new game clears board', await S(page, "s.board.every(v => !v)") && await page.locator('.win-line').count() === 0);
   for (const n of [0, 1, 2, 4, 3, 5, 7, 6, 8]) await page.locator('.cell').nth(n).click();
-  check('draw detected', (await page.textContent('.ttt-status')).includes('draw'));
+  check('draw detected', (await page.textContent('.ttt-status')).includes('תיקו'));
   await page.click('[data-a=reset]'); await page.click('[data-a=reset]');
   check('reset stats', await page.evaluate(() => GH.storage.getStats('tic-tac-toe', {}).two.w === 0));
   await start(page, 'tic-tac-toe', { mode: 'cpu', difficulty: 'hard', first: 'o' });

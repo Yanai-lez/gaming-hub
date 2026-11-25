@@ -28,7 +28,8 @@
     box.className = 'canvas-box';
     const pad = document.createElement('div');
     pad.className = 'pad';
-    pad.innerHTML = '<button type="button" data-k="left" aria-label="Move left">◀</button><button type="button" data-k="right" aria-label="Move right">▶</button><button type="button" data-k="fire" class="fire">FIRE</button>';
+    pad.dir = 'ltr';
+    pad.innerHTML = '<button type="button" data-k="left" aria-label="תזוזה שמאלה">◀</button><button type="button" data-k="right" aria-label="תזוזה ימינה">▶</button><button type="button" data-k="fire" class="fire">אש</button>';
     stage.append(box, pad);
     const view = GH.engine.createCanvas(scope, box, { width: W, height: H }, () => draw());
     const g = view.g;
@@ -56,12 +57,14 @@
       hud();
     }
 
-    function hud() { ctx.setHud([['Score', s.score], ['Wave', s.wave], ['Health', s.hp + '%'], ['Lives', s.lives]]); }
+    const note = () => `גל ${s.wave}, ${{ easy: 'קל', normal: 'רגיל', hard: 'קשה' }[ctx.options.difficulty]}`;
+
+    function hud() { ctx.setHud([['ניקוד', s.score], ['גל', s.wave], ['בריאות', s.hp + '%'], ['חיים', s.lives]]); }
 
     function end(title) {
       if (s.over) return;
       s.over = true; hud(); draw();
-      ctx.gameOver({ score: s.score, note: `Wave ${s.wave}, ${ctx.options.difficulty}`, title, lines: [`You reached wave ${s.wave}.`] });
+      ctx.gameOver({ score: s.score, note: note(), title, lines: [`הגעתם לגל ${s.wave}.`] });
     }
 
     function damage() {
@@ -76,7 +79,7 @@
         s.lives--;
         GH.audio.sfx('explode');
         fx.burst(s.ship.x, s.ship.y, '#ffffff', 50, 260);
-        if (s.lives <= 0) return end('Your fleet is lost');
+        if (s.lives <= 0) return end('החללית הושמדה');
         s.hp = 100; s.invulnerable = 2; s.bombs = [];
       }
       hud();
@@ -167,7 +170,7 @@
       s.bombs = s.bombs.filter(b => !b.dead && b.y < H + 20);
       fx.update(dt);
       if (s.over) return;
-      if (s.aliens.some(a => a.y + a.h / 2 >= SHIP_Y - 16)) { s.lives = 0; end('The invaders landed'); return; }
+      if (s.aliens.some(a => a.y + a.h / 2 >= SHIP_Y - 16)) { s.lives = 0; end('הפולשים נחתו'); return; }
       if (!s.aliens.length) nextWave();
     }
 
@@ -216,7 +219,7 @@
       fx.draw(g);
       if (s.banner > 0) {
         g.globalAlpha = Math.min(1, s.banner); g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '900 38px system-ui, sans-serif';
-        g.fillText(`WAVE ${s.wave}`, W / 2, H * 0.66); g.globalAlpha = 1;
+        g.direction = 'rtl'; g.fillText(`גל ${s.wave}`, W / 2, H * 0.66); g.globalAlpha = 1;
       }
       if (s.flash > 0) { g.fillStyle = `rgba(255,60,90,${s.flash})`; g.fillRect(-10, -10, W + 20, H + 20); }
       g.restore();
@@ -243,18 +246,18 @@
     return {
       state: s,
       pause() { keys.clear(); drag = null; held.left = held.right = held.fire = false; for (const b of pad.children) b.classList.remove('held'); },
-      result: () => ({ score: s.score, note: `Wave ${s.wave}, ${ctx.options.difficulty}` })
+      result: () => ({ score: s.score, note: note() })
     };
   }
 
   GH.games.register({
-    id: 'space-invaders', name: 'Space Invaders', accent: '#a98bff', music: 'invaders', bestLabel: 'High score',
-    description: 'Hold the line against descending alien waves and hunt the bonus saucer.',
-    howTo: 'Drag the field or use the buttons. Arrows or A/D move, Space fires.',
-    controls: [['← → / A D', 'Move the ship'], ['Space', 'Fire'], ['Mouse / touch', 'Drag to steer and fire'], ['P / Esc', 'Pause'], ['Points', 'Scout 10, Fighter 20, Tank 30 (2 hits), Saucer 100']],
+    id: 'space-invaders', name: 'פולשים מהחלל', accent: '#a98bff', music: 'invaders', bestLabel: 'שיא',
+    description: 'עצרו את גלי החייזרים שמתקרבים וצודו את הצלחת המעופפת.',
+    howTo: 'גררו על המסך או השתמשו בכפתורים. במקלדת: חצים או A/D לתזוזה, רווח לירי.',
+    controls: [['← → / A D', 'הזזת החללית'], ['רווח', 'ירי'], ['עכבר / מגע', 'גרירה לניווט ולירי'], ['P / Esc', 'השהיה'], ['נקודות', 'סייר 10, לוחם 20, טנק 30 (שתי פגיעות), צלחת 100']],
     options: [
-      { key: 'difficulty', label: 'Difficulty', default: 'normal', choices: [['easy', 'Easy'], ['normal', 'Normal'], ['hard', 'Hard']] },
-      { key: 'autofire', label: 'Auto-fire', default: 'off', choices: [['off', 'Off'], ['on', 'On']] }
+      { key: 'difficulty', label: 'רמת קושי', default: 'normal', choices: [['easy', 'קל'], ['normal', 'רגיל'], ['hard', 'קשה']] },
+      { key: 'autofire', label: 'ירי אוטומטי', default: 'off', choices: [['off', 'כבוי'], ['on', 'פעיל']] }
     ],
     create
   });
