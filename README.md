@@ -5,12 +5,12 @@ Five browser games in one site (Hebrew, right-to-left interface), written in pla
 | Game | Highlights |
 |---|---|
 | 👾 Space Invaders | Three alien types and a bonus saucer, waves, health and lives, 3 difficulties, optional auto-fire |
-| 🏓 Pong | Hit-position bounce angles, rising speed, 3 lives, 3 difficulties |
+| 🏓 Pong | Hit-position bounce angles, rising speed, 3 lives, 3 difficulties, power-up bubbles |
 | ❌ Tic-Tac-Toe | Easy (random), Medium (win/block), Hard (Minimax), two players, stats |
 | 🧠 Simon Says | Four tones, rising pace, speed setting, practice mode |
 | 🍉 Fruit Ninja | Swipe slicing by segment–circle intersection, combos, bombs, timer and lives |
 
-Also: saved high scores and result history, sound effects and music (synthesised in the browser), global mute, fullscreen, pause, touch, mouse and keyboard controls.
+Also: saved high scores and result history, sound effects and music (synthesised in the browser), global mute, fullscreen, pause, touch, mouse and keyboard controls, installable app (works offline) and a logo preview for shared links.
 
 ## Publish with GitHub Pages
 
@@ -50,6 +50,8 @@ node tests/e2e.js
 ```
 
 ## Notes
+
+- After changing files, raise the `?v=` numbers in `index.html` and `VERSION` plus the file list in `sw.js`.
 
 - Scores and settings are stored per browser and device.
 - Browsers start audio only after the first tap or key press.

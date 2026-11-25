@@ -107,3 +107,6 @@ body.in-game { height: 100vh; height: 100dvh; overflow: hidden; overscroll-behav
   .pad button { pointer-events: auto; flex: 0 0 80px; opacity: .85; }
   .pad button.fire { margin-left: auto; flex: 0 0 110px; }
 }
+
+/* Boards and arrow buttons are spatial: never mirror them in the right-to-left page. */
+.ttt-board, .simon-board, .pad { direction: ltr; }

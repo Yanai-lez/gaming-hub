@@ -2,7 +2,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium, devices } = require('playwright');
 const ROOT = path.join(__dirname, '..');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 /* Served from a sub-folder, like GitHub Pages project sites. */
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -75,7 +75,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   const he = await open({ viewport: { width: 1200, height: 800 } });
   check('page is Hebrew and right-to-left', await he.evaluate(() => document.documentElement.lang === 'he' && getComputedStyle(document.body).direction === 'rtl'));
   /* Visible text on every screen: only key names may stay in Latin letters. */
-  const latin = () => he.evaluate(() => (document.body.innerText.match(/[A-Za-z]{2,}/g) || []).filter(w => !['Esc', 'Enter', 'JavaScript'].includes(w)));
+  const latin = () => he.evaluate(() => (document.body.innerText.match(/[A-Za-z]{2,}/g) || []).filter(w => !['Esc', 'Enter', 'JavaScript', 'Chrome', 'Edge', 'Safari'].includes(w)));
   const found = [...await latin()];
   await he.click('#btn-settings'); found.push(...await latin()); await he.click('#btn-close-settings');
   for (const id of IDS) {
@@ -84,7 +84,21 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
     await he.click('#btn-menu'); found.push(...await latin());
   }
   check('no English text left on screen', found.length === 0, [...new Set(found)]);
+  const overs = [];
+  for (const id of ['space-invaders', 'pong', 'simon-says', 'fruit-ninja']) {
+    await start(he, id);
+    if (id === 'space-invaders') await S(he, '(s.aliens[0].y = 560, s.banner = 0, 1)');
+    if (id === 'pong') await S(he, '(s.lives = 1, s.serve = 0, s.balls = [{x: 20, y: 590, vx: 0, vy: 500, trail: []}], s.paddle.x = 300, 1)');
+    if (id === 'fruit-ninja') await S(he, '(s.left = 0.05, 1)');
+    if (id === 'simon-says') { await he.waitForFunction(() => GH.app.current.instance.state.accepting); await he.keyboard.press('Digit' + ((await S(he, '(s.sequence[0] + 1) % 4')) + 1)); }
+    await he.waitForSelector('#final-score'); overs.push(...await latin());
+  }
+  check('game-over screens are in Hebrew', overs.length === 0, [...new Set(overs)]);
   await start(he, 'tic-tac-toe', { mode: 'two' });
+  for (const n of [2, 0, 4, 1, 6]) await he.locator('.cell').nth(n).click();
+  const line = await he.evaluate(() => { const l = document.querySelector('.win-line line'), b = document.querySelector('.ttt-board').getBoundingClientRect(); const c = [...document.querySelectorAll('.cell.winning')].map(e => { const r = e.getBoundingClientRect(); return (r.x + r.width / 2 - b.x) / b.width * 300; }); return { x1: +l.getAttribute('x1'), x2: +l.getAttribute('x2'), cells: c }; });
+  check('winning line lies on the winning cells', Math.abs(line.x1 - line.cells[0]) < 15 && Math.abs(line.x2 - line.cells[2]) < 15, line);
+  await he.click('[data-a=new]');
   const xs = await he.$$eval('.cell', c => c.map(e => e.getBoundingClientRect().x));
   check('board keeps left-to-right cell order', xs[0] < xs[1] && xs[1] < xs[2]);
   await start(he, 'space-invaders');
@@ -100,11 +114,11 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   await start(page, 'pong');
   await sleep(1600);
   await page.keyboard.press('KeyP');
-  const before = await S(page, 'JSON.stringify(s.ball)'); await sleep(400);
-  check('pause freezes the game', await state(page) === 'paused' && before === await S(page, 'JSON.stringify(s.ball)'));
+  const before = await S(page, 'JSON.stringify(s.balls)'); await sleep(400);
+  check('pause freezes the game', await state(page) === 'paused' && before === await S(page, 'JSON.stringify(s.balls)'));
   check('pause leaves no running frames', (await activity(page)).frames === 0);
   await page.click('#btn-resume'); await sleep(300);
-  check('resume continues', await state(page) === 'playing' && before !== await S(page, 'JSON.stringify(s.ball)'));
+  check('resume continues', await state(page) === 'playing' && before !== await S(page, 'JSON.stringify(s.balls)'));
   await page.click('#btn-settings');
   check('settings pauses the game', await state(page) === 'paused');
   await page.click('#btn-close-settings'); await sleep(100);
@@ -174,20 +188,59 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   const pb = await page.locator('.game-canvas').boundingBox();
   await page.mouse.move(pb.x + pb.width * 0.25, pb.y + pb.height * 0.9);
   check('mouse moves paddle', Math.abs(await S(page, 's.paddle.x') - 100) < 4);
-  await S(page, '(s.serve = 0, s.paddle.x = 200, s.ball = {x: 220, y: 530, vx: 0, vy: 400}, 1)'); await sleep(200);
-  check('paddle returns ball, scores, speeds up', await S(page, 's.hits === 1 && s.score === 2 && s.ball.vy < 0 && s.ball.vx > 0 && s.speed > 310'));
-  await S(page, '(s.ball = {x: 12, y: 300, vx: -300, vy: -50}, 1)'); await sleep(100);
-  check('side wall bounce', await S(page, 's.ball.vx > 0'));
-  await S(page, '(s.ball = {x: 20, y: 590, vx: 0, vy: 500}, s.paddle.x = 300, 1)'); await sleep(200);
+  await S(page, '(s.serve = 0, s.paddle.x = 200, s.balls = [{x: 220, y: 530, vx: 0, vy: 400, trail: []}], 1)'); await sleep(200);
+  check('paddle returns ball, scores, speeds up', await S(page, 's.hits === 1 && s.score === 2 && s.balls[0].vy < 0 && s.balls[0].vx > 0 && s.speed > 310'));
+  await S(page, '(s.balls = [{x: 12, y: 300, vx: -300, vy: -50, trail: []}], 1)'); await sleep(100);
+  check('side wall bounce', await S(page, 's.balls[0].vx > 0'));
+  await S(page, '(s.balls = [{x: 20, y: 590, vx: 0, vy: 500, trail: []}], s.paddle.x = 300, 1)'); await sleep(200);
   check('miss costs a life', await S(page, 's.lives === 2'));
-  await S(page, '(s.lives = 1, s.serve = 0, s.score = 41, s.ball = {x: 20, y: 590, vx: 0, vy: 500}, 1)'); await sleep(200);
+  await S(page, '(s.lives = 1, s.serve = 0, s.score = 41, s.balls = [{x: 20, y: 590, vx: 0, vy: 500, trail: []}], 1)'); await sleep(200);
   check('pong game over', await state(page) === 'over');
   await page.evaluate(() => { location.hash = '#/'; });
   await page.reload();
   check('high score persists', await page.textContent('.card[data-game=pong] .card-best strong') === '41');
+  await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('gaming-hub:v1')); d.scores.pong.history.push({ score: 1, note: '3 hits, medium', at: 0 }); localStorage.setItem('gaming-hub:v1', JSON.stringify(d)); });
+  await page.reload();
+  check('old English notes removed, score kept', await page.evaluate(() => GH.storage.history('pong').every(h => !/[A-Za-z]/.test(h.note)) && GH.storage.best('pong') === 41));
   await start(page, 'pong'); await S(page, '(s.score = 55, 1)');
   await page.evaluate(() => { location.hash = '#/'; }); await sleep(150);
   check('score kept when leaving mid-game', await page.textContent('.card[data-game=pong] .card-best strong') === '55');
+
+  console.log('\n== pong bonuses ==');
+  await start(page, 'pong', { difficulty: 'medium', bonus: 'on' });
+  const cv = await page.locator('.game-canvas').boundingBox();
+  const at = (x, y) => [cv.x + cv.width * x / 400, cv.y + cv.height * y / 600];
+  const hold = '(s.serve = 0, s.nextBubble = 99, s.bubbles = [], s.balls = [{x: 200, y: 200, vx: 0, vy: 0, trail: []}], 1)';
+  async function grab(kind) {
+    await S(page, `(i.spawnBubble('${kind}'), Object.assign(s.bubbles[s.bubbles.length - 1], {x: 300, y: 300}), 1)`);
+    await page.mouse.click(...at(300, 300));
+  }
+  await S(page, hold); await grab('multi');
+  check('multi-ball adds two balls', await S(page, 's.balls.length === 3 && s.bubbles.length === 0'));
+  await S(page, '(s.balls[0].y = 700, s.balls[0].vy = 10, 1)'); await sleep(100);
+  check('losing a spare ball costs no life', await S(page, 's.balls.length === 2 && s.lives === 3'));
+  await S(page, hold); await grab('wide');
+  check('wide paddle', await S(page, 's.paddle.w > 130'));
+  await S(page, '(s.effects.wide = 0.05, 1)'); await sleep(200);
+  check('effect expires', await S(page, 's.paddle.w === 86 && !s.effects.wide'));
+  await grab('slow'); await grab('turbo');
+  check('turbo replaces slow', await S(page, '!!s.effects.turbo && !s.effects.slow'));
+  await grab('double'); await grab('life');
+  check('extra life', await S(page, 's.lives === 4'));
+  await S(page, '(s.score = 0, s.paddle.x = 200, s.balls = [{x: 200, y: 530, vx: 0, vy: 400, trail: []}], 1)'); await sleep(150);
+  check('turbo and double multiply points', await S(page, 's.score === 8'), await S(page, 's.score'));
+  await S(page, hold); await grab('gift');
+  check('gift gives points', await S(page, 's.score === 28'));
+  await grab('shield'); await S(page, '(s.paddle.x = 60, s.balls = [{x: 350, y: 575, vx: 0, vy: 300, trail: []}], 1)'); await sleep(150);
+  check('shield saves the ball once', await S(page, '!s.shield && s.lives === 4 && s.balls[0].vy < 0'));
+  await S(page, '(i.spawnBubble(), s.bubbles[0].age = 3.45, 1)'); await sleep(150);
+  check('uncaught bubble disappears', await S(page, 's.bubbles.length === 0'));
+  await S(page, '(s.nextBubble = 0.01, 1)'); await sleep(150);
+  check('bubbles appear on their own', await S(page, 's.bubbles.length === 1'));
+  await page.keyboard.press('KeyP'); const age = await S(page, 's.bubbles[0].age'); await sleep(300);
+  check('pause freezes bubbles', age === await S(page, 's.bubbles[0].age'));
+  await start(page, 'pong', { bonus: 'off' }); await S(page, '(s.serve = 0, s.nextBubble = 0, 1)'); await sleep(200);
+  check('bonuses can be switched off', await S(page, 's.bubbles.length === 0'));
 
   console.log('\n== tic-tac-toe ==');
   const logic = await page.evaluate(() => {
@@ -295,6 +348,11 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   let r = await phone.locator('.game-canvas').boundingBox();
   await swipe(r.x + r.width * 0.5, r.y + r.height * 0.9, r.x + r.width * 0.8, r.y + r.height * 0.9);
   check('touch drags paddle', await S(phone, 's.paddle.x > 290'), await S(phone, 's.paddle.x'));
+  await start(phone, 'pong', { bonus: 'on' });
+  await S(phone, "(s.serve = 0, s.nextBubble = 99, s.balls = [{x: 200, y: 200, vx: 0, vy: 0, trail: []}], s.paddle.x = 100, i.spawnBubble('life'), Object.assign(s.bubbles[0], {x: 320, y: 300}), 1)");
+  r = await phone.locator('.game-canvas').boundingBox();
+  await swipe(r.x + r.width * 0.8, r.y + r.height * 0.5, r.x + r.width * 0.9, r.y + r.height * 0.5);
+  check('finger tap catches bubble without moving paddle', await S(phone, 's.lives === 4 && s.paddle.x === 100'), await S(phone, '[s.lives, s.paddle.x]'));
   await start(phone, 'space-invaders');
   r = await phone.locator('.pad [data-k=left]').boundingBox();
   const sx = await S(phone, 's.ship.x'); await touch('touchStart', r.x + 20, r.y + 20); await sleep(300); await touch('touchEnd');
@@ -306,12 +364,33 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('finger swipe slices', await S(phone, 's.score === 1'), await S(phone, 's.score'));
   await start(phone, 'tic-tac-toe', { mode: 'two' });
   await phone.locator('.cell').nth(4).tap();
-  check('tap places mark', await S(phone, "s.board[4] === 'X'"));
+  await sleep(100);
+  check('tap places mark', await S(phone, "s.board[4] === 'X'"), await S(phone, '[s.board, s.turn, GH.app.current.state, GH.app.current.def.id, i.state === s]'));
   await start(phone, 'simon-says');
   await phone.waitForFunction(() => GH.app.current.instance.state.accepting);
   await phone.locator('.simon-pad').nth(await S(phone, 's.sequence[0]')).tap();
   check('tap answers Simon once', await S(phone, 's.score === 1'));
   await phone.evaluate(() => { location.hash = '#/'; });
+
+  console.log('\n== install, offline, link preview ==');
+  const app = await open({ ...devices['Pixel 7'] });
+  await app.evaluate(() => navigator.serviceWorker.ready);
+  await app.reload(); await app.waitForFunction(() => !!navigator.serviceWorker.controller);
+  const dev = await app.context().newCDPSession(app);
+  const manifest = await dev.send('Page.getAppManifest');
+  check('manifest loads without errors', manifest.errors.length === 0 && manifest.url.endsWith('manifest.webmanifest'), manifest.errors);
+  const install = (await dev.send('Page.getInstallabilityErrors')).installabilityErrors.filter(e => e.errorId !== 'in-incognito');
+  check('browser reports the app as installable', install.length === 0, install);
+  check('icons and share image exist', await app.evaluate(async () => (await Promise.all([...JSON.parse(await (await fetch('manifest.webmanifest')).text()).icons.map(i => i.src), 'assets/icons/apple-touch-icon.png', 'assets/icons/favicon-32.png', 'assets/icons/share.png'].map(u => fetch(u)))).every(r => r.ok)));
+  await app.click('#btn-install');
+  const installOpen = await app.evaluate(() => document.getElementById('install-help').open || document.querySelectorAll('#install-steps li').length === 0);
+  check('install button gives instructions or a prompt', installOpen);
+  await app.evaluate(() => document.getElementById('install-help').close());
+  await app.context().setOffline(true); await app.reload();
+  check('works offline', await app.locator('.card').count() === 5 && await app.$$eval('.card img', a => a.every(i => i.complete && i.naturalWidth > 0)));
+  await start(app, 'pong');
+  check('game starts offline', await state(app) === 'playing');
+  await app.context().setOffline(false); await app.context().close();
 
   await page.evaluate(() => { location.hash = '#/'; });
   await page.click('#btn-settings'); await page.click('#btn-reset'); await page.click('#btn-reset');

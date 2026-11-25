@@ -26,7 +26,14 @@
     return base;
   }
 
-  let data = load();
+  /* Result notes saved by the earlier English version are dropped; the scores stay. */
+  function dropOldNotes(d) {
+    for (const s of Object.values(d.scores))
+      for (const h of (s && Array.isArray(s.history) ? s.history : [])) if (/[A-Za-z]{3,}/.test(h.note)) h.note = '';
+    return d;
+  }
+
+  let data = dropOldNotes(load());
   let persistent = true;
 
   function save() {
