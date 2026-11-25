@@ -1,0 +1,71 @@
+:root {
+  --bg: #0d1021; --surface: #171b33; --surface-2: #222746; --line: #31386090;
+  --text: #f2f3ff; --muted: #a4a9cc; --accent: #7c6cff; --danger: #ff5d73;
+  --radius: 18px; --bar: 60px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body {
+  min-height: 100vh; min-height: 100dvh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text); line-height: 1.45;
+  background: radial-gradient(900px 500px at 10% -10%, #2b236060, transparent), radial-gradient(800px 500px at 100% 0%, #0f4c6060, transparent), var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar {
+  height: calc(var(--bar) + env(safe-area-inset-top)); display: flex; align-items: center; gap: 8px;
+  padding: env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-weight: 800; font-size: 1.12rem; min-width: 0; }
+.brand span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.in-game .brand img { display: none; }
+.topbar-actions { margin-left: auto; display: flex; gap: 6px; }
+.icon-btn {
+  width: 42px; height: 42px; flex: none; display: grid; place-items: center; cursor: pointer;
+  color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+}
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px;
+  font: inherit; font-weight: 700; text-decoration: none; color: var(--text); cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px;
+  transition: transform .15s ease, filter .15s ease;
+}
+.btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn:active { transform: translateY(1px); }
+.btn-accent { background: var(--accent); color: #0b0d1a; border-color: transparent; }
+.btn-ghost { background: transparent; }
+.btn-danger { color: var(--danger); background: transparent; }
+.btn-big { min-width: 220px; min-height: 54px; font-size: 1.1rem; }
+:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.stage:focus { outline: none; }
+.muted { color: var(--muted); }
+.dialog {
+  margin: auto; width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  padding: 22px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.dialog::backdrop { background: #05060fcc; backdrop-filter: blur(4px); }
+.dialog h2 { margin-bottom: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.row input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--accent); }
+.row input[type=range] { width: 150px; accent-color: var(--accent); }
+.dialog-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px);
+  width: max-content; max-width: calc(100vw - 32px); padding: 12px 18px; z-index: 20;
+  background: var(--text); color: var(--bg); border-radius: 12px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: .25s ease;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+@media (max-width: 400px) {
+  .topbar { gap: 4px; }
+  .topbar-actions { gap: 4px; }
+  .icon-btn { width: 38px; height: 38px; }
+  .in-game .brand { font-size: .85rem; line-height: 1.15; }
+  .in-game .brand span { white-space: normal; }
+}
