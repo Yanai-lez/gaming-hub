@@ -110,3 +110,7 @@ body.in-game { height: 100vh; height: 100dvh; overflow: hidden; overscroll-behav
 
 /* Boards and arrow buttons are spatial: never mirror them in the right-to-left page. */
 .ttt-board, .simon-board, .pad { direction: ltr; }
+
+.menu-history { width: 100%; text-align: right; }
+.menu-history summary { cursor: pointer; text-align: center; font-weight: 700; padding: 10px; }
+@media (min-width: 900px) { .menu-history { display: none; } .immersive .menu-history { display: block; } }

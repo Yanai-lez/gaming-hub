@@ -162,7 +162,9 @@
       el('p', { class: 'menu-best', text: `${def.bestLabel}: ${store.best(def.id) || '–'}` }),
       ...groups,
       el('div', { class: 'overlay-actions' },
-        el('button', { class: 'btn btn-accent btn-big', type: 'button', id: 'btn-start', onclick: startGame, text: 'התחלה' })));
+        el('button', { class: 'btn btn-accent btn-big', type: 'button', id: 'btn-start', onclick: startGame, text: 'התחלה' })),
+      /* Narrow screens have no side panel, so the history is offered here. */
+      store.history(def.id).length ? el('details', { class: 'menu-history' }, el('summary', { text: 'תוצאות אחרונות' }), historyList(store.history(def.id))) : null);
   }
 
   function pause() {
@@ -203,6 +205,11 @@
   }
   function hideOverlay() { $('overlay').hidden = true; $('overlay').textContent = ''; }
 
+  function historyList(history) {
+    return el('ol', { class: 'history' }, ...history.map(h => el('li', {}, el('strong', { text: h.score }), el('span', { text: h.note }),
+      el('time', { text: new Date(h.at).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) }))));
+  }
+
   function renderSide(def) {
     const history = store.history(def.id);
     const side = $('side');
@@ -212,10 +219,7 @@
         el('dl', {}, ...def.controls.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })]))),
       el('section', {}, el('h3', { text: def.bestLabel }), el('p', { class: 'side-best', text: store.best(def.id) || '–' })),
       el('section', {}, el('h3', { text: 'תוצאות אחרונות' }),
-        history.length
-          ? el('ol', { class: 'history' }, ...history.map(h => el('li', {}, el('strong', { text: h.score }), el('span', { text: h.note }),
-              el('time', { text: new Date(h.at).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) }))))
-          : el('p', { class: 'muted', text: 'עדיין לא הסתיימו משחקים.' })));
+        history.length ? historyList(history) : el('p', { class: 'muted', text: 'עדיין לא הסתיימו משחקים.' })));
   }
 
   function updateChrome() {

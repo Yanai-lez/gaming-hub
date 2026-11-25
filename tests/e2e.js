@@ -372,6 +372,14 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('tap answers Simon once', await S(phone, 's.score === 1'));
   await phone.evaluate(() => { location.hash = '#/'; });
 
+  console.log('\n== history on phones ==');
+  const small = await open({ ...devices['Pixel 7'] });
+  await small.evaluate(() => GH.storage.addHistory('pong', 9, '9 פגיעות'));
+  await small.evaluate(() => { location.hash = '#/game/pong'; });
+  await small.click('.menu-history summary');
+  check('history visible in the phone start menu', await small.isVisible('.menu-history .history li'));
+  await small.context().close();
+
   console.log('\n== install, offline, link preview ==');
   const app = await open({ ...devices['Pixel 7'] });
   await app.evaluate(() => navigator.serviceWorker.ready);
