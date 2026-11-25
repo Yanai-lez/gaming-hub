@@ -6,7 +6,7 @@ Five browser games in one site (Hebrew, right-to-left interface), written in pla
 |---|---|
 | 👾 Space Invaders | Three alien types and a bonus saucer, waves, health and lives, 3 difficulties, optional auto-fire |
 | 🏓 Pong | Hit-position bounce angles, rising speed, 3 lives, 3 difficulties, power-up bubbles |
-| ❌ Tic-Tac-Toe | Easy (random), Medium (win/block), Hard (Minimax), two players, stats |
+| ❌ Tic-Tac-Toe | Easy (random), Medium (win/block), Hard (Minimax), Challenge (Minimax plus traps), two players, stats |
 | 🧠 Simon Says | Four tones, rising pace, speed setting, practice mode |
 | 🍉 Fruit Ninja | Swipe slicing by segment–circle intersection, combos, bombs, timer and lives |
 

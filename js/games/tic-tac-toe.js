@@ -1,4 +1,4 @@
-/* Tic-Tac-Toe: random, tactical and Minimax opponents, plus two players. */
+/* Tic-Tac-Toe: random, tactical, Minimax and trap-setting opponents, plus two players. */
 (function (GH) {
   'use strict';
   const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -26,6 +26,41 @@
     return value;
   }
 
+  /* Every move that keeps the best result the position allows. */
+  function bestMoves(b, mark) {
+    const scored = empty(b).map(i => { b[i] = mark; const v = -minimax(b, other(mark)); b[i] = ''; return [i, v]; });
+    const best = Math.max(...scored.map(x => x[1]));
+    return scored.filter(x => x[1] === best).map(x => x[0]);
+  }
+
+  const completes = (b, mark) => empty(b).filter(i => { b[i] = mark; const w = winner(b); b[i] = ''; return w && w.mark === mark; });
+
+  /* "Challenge" level: models a typical opponent, who wins or blocks when there is an immediate
+     threat and otherwise may play anywhere, and measures how likely that opponent is to be beaten. */
+  const trapMemo = new Map();
+  function trapChance(b, bot) {
+    /* b: the opponent is to move. */
+    const key = b.map(v => v || '-').join('') + bot;
+    if (trapMemo.has(key)) return trapMemo.get(key);
+    const human = other(bot), end = winner(b);
+    let chance = 0;
+    if (end) chance = end.mark === bot ? 1 : 0;
+    else {
+      let replies = completes(b, human);
+      if (!replies.length) replies = completes(b, bot);
+      if (!replies.length) replies = empty(b);
+      for (const i of replies) {
+        b[i] = human;
+        const w = winner(b);
+        if (!w) chance += Math.max(...bestMoves(b, bot).map(j => { b[j] = bot; const c = trapChance(b, bot); b[j] = ''; return c; }));
+        b[i] = '';
+      }
+      chance /= replies.length;
+    }
+    trapMemo.set(key, chance);
+    return chance;
+  }
+
   function chooseMove(board, mark, difficulty) {
     const b = board.slice(), free = empty(b);
     if (!free.length) return -1;
@@ -37,9 +72,13 @@
       }
       return pick(free);
     }
-    const scored = free.map(i => { b[i] = mark; const v = -minimax(b, other(mark)); b[i] = ''; return [i, v]; });
-    const best = Math.max(...scored.map(x => x[1]));
-    return pick(scored.filter(x => x[1] === best).map(x => x[0]));
+    const safe = bestMoves(b, mark);
+    if (difficulty !== 'challenge') return pick(safe);
+    const win = completes(b, mark);
+    if (win.length) return pick(win);
+    const rated = safe.map(i => { b[i] = mark; const c = trapChance(b, mark); b[i] = ''; return [i, c]; });
+    const top = Math.max(...rated.map(x => x[1]));
+    return pick(rated.filter(x => x[1] > top - 1e-9).map(x => x[0]));
   }
 
   const MARK = {
@@ -119,7 +158,7 @@
       GH.audio.sfx(!w.mark ? 'draw' : two || w.mark === 'X' ? 'win' : 'lose');
       if (!two) {
         GH.storage.updateBest('tic-tac-toe', t.streak);
-        GH.storage.addHistory('tic-tac-toe', t.streak, `${!w.mark ? 'תיקו' : w.mark === 'X' ? 'ניצחון' : 'הפסד'}, ${{ easy: 'קל', medium: 'בינוני', hard: 'קשה' }[difficulty]}`);
+        GH.storage.addHistory('tic-tac-toe', t.streak, `${!w.mark ? 'תיקו' : w.mark === 'X' ? 'ניצחון' : 'הפסד'}, ${{ easy: 'קל', medium: 'בינוני', hard: 'קשה', challenge: 'מאתגר' }[difficulty]}`);
       }
       ctx.refreshSide(); render(); hud();
     }
@@ -166,12 +205,12 @@
 
   GH.games.register({
     id: 'tic-tac-toe', name: 'איקס עיגול', accent: '#ff8a5c', music: null, bestLabel: 'רצף ניצחונות שיא',
-    description: 'נצחו את המחשב בשלוש רמות, או אתגרו חבר על אותו מסך.',
+    description: 'נצחו את המחשב בארבע רמות, או אתגרו חבר על אותו מסך.',
     howTo: 'הקישו על משבצת כדי לסמן. המקשים 1–9 מסודרים כמו במקלדת הספרות.',
     controls: [['לחיצה / הקשה', 'סימון משבצת'], ['1–9', 'משבצות, כמו במקלדת הספרות'], ['חצים + Enter', 'מעבר ובחירה'], ['N', 'משחק חדש'], ['רצף', 'ניצחונות ברצף מול המחשב; תיקו לא שובר אותו']],
     options: [
       { key: 'mode', label: 'יריב', default: 'cpu', choices: [['cpu', 'מחשב'], ['two', 'שני שחקנים']] },
-      { key: 'difficulty', label: 'רמת המחשב', default: 'medium', choices: [['easy', 'קל'], ['medium', 'בינוני'], ['hard', 'קשה']] },
+      { key: 'difficulty', label: 'רמת המחשב', default: 'medium', choices: [['easy', 'קל'], ['medium', 'בינוני'], ['hard', 'קשה'], ['challenge', 'מאתגר']] },
       { key: 'first', label: 'מי מתחיל', default: 'x', choices: [['x', 'X (אתם)'], ['o', 'O'], ['alternate', 'לסירוגין']] }
     ],
     logic: { winner, chooseMove },

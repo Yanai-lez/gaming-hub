@@ -262,9 +262,38 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
     }
     Math.random = real;
     const m = (s, d) => chooseMove(s.split('').map(c => c === '.' ? '' : c), 'O', d);
-    return { games, losses, wins: m('XX.OO....', 'medium'), blocks: m('XX..O....', 'medium'), easy: new Set(Array.from({ length: 200 }, () => m('X........', 'easy'))).size };
+    /* Challenge must never lose either, and must beat a casual opponent more often than Hard. */
+    let cGames = 0, cLosses = 0;
+    for (const r of [0, 0.34, 0.67, 0.999]) {
+      Math.random = () => r;
+      const play = (b, turn) => {
+        const w = winner(b); if (w) { cGames++; if (w.mark === 'X') cLosses++; return; }
+        if (turn === 'O') { const n = b.slice(); n[chooseMove(n, 'O', 'challenge')] = 'O'; play(n, 'X'); }
+        else b.forEach((v, i) => { if (!v) { const n = b.slice(); n[i] = 'X'; play(n, 'O'); } });
+      };
+      play(Array(9).fill(''), 'X'); play(Array(9).fill(''), 'O');
+    }
+    let seed = 1; Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const rate = level => {
+      let won = 0; const total = 6000;
+      for (let g = 0; g < total; g++) {
+        const b = Array(9).fill(''); let turn = g % 2 ? 'O' : 'X';
+        while (!winner(b)) {
+          const i = turn === 'O' ? chooseMove(b, 'O', level) : chooseMove(b, 'X', 'medium');
+          b[i] = turn; turn = turn === 'X' ? 'O' : 'X';
+        }
+        if (winner(b).mark === 'O') won++;
+      }
+      return won / total;
+    };
+    const rates = { hard: rate('hard'), challenge: rate('challenge') };
+    Math.random = real;
+    return { cGames, cLosses, rates, games, losses, wins: m('XX.OO....', 'medium'), blocks: m('XX..O....', 'medium'), easy: new Set(Array.from({ length: 200 }, () => m('X........', 'easy'))).size };
   });
   check(`hard never loses (${logic.games} games)`, logic.losses === 0, logic);
+  check(`challenge never loses (${logic.cGames} games)`, logic.cLosses === 0, logic);
+  check('challenge wins more than hard', logic.rates.challenge > logic.rates.hard, logic.rates);
+  console.log('      win rate against a casual player', logic.rates);
   check('medium takes a win', logic.wins === 5, logic);
   check('medium blocks', logic.blocks === 2, logic);
   check('easy is random', logic.easy === 8, logic);
@@ -290,6 +319,9 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('computer waits while paused', await S(page, "s.board.filter(v => v === 'O').length === 1"));
   await page.keyboard.press('KeyP'); await sleep(800);
   check('computer moves after resume', await S(page, "s.board.filter(v => v === 'O').length === 2"));
+  await start(page, 'tic-tac-toe', { difficulty: 'challenge', first: 'o' });
+  await sleep(900);
+  check('challenge level playable', await S(page, "s.board.filter(v => v === 'O').length === 1"));
   await start(page, 'tic-tac-toe', { difficulty: 'easy', first: 'x' });
   await S(page, "(s.board = ['X','X','','O','O','','','',''], 1)");
   await page.keyboard.press('Digit9');
