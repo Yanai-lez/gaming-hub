@@ -2,7 +2,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium, devices } = require('playwright');
 const ROOT = path.join(__dirname, '..');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' };
 /* Served from a sub-folder, like GitHub Pages project sites. */
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -239,6 +239,9 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('bubbles appear on their own', await S(page, 's.bubbles.length === 1'));
   await page.keyboard.press('KeyP'); const age = await S(page, 's.bubbles[0].age'); await sleep(300);
   check('pause freezes bubbles', age === await S(page, 's.bubbles[0].age'));
+  await start(page, 'pong', { bonus: 'on' });
+  const seen = await page.evaluate(() => new Promise(done => { const s = GH.app.current.instance.state; let count = 0, most = 0; const known = new Set(); const t0 = performance.now(); const tick = () => { s.lives = 3; s.balls.forEach(b => { if (b.y > 300) { b.y = 200; b.vy = -Math.abs(b.vy); } }); s.bubbles.forEach(b => { if (!known.has(b)) { known.add(b); count++; } }); most = Math.max(most, s.bubbles.length); if (performance.now() - t0 < 11000) requestAnimationFrame(tick); else done({ count, most }); }; tick(); }));
+  check('bubbles come often (3+ in about 10 s of play)', seen.count >= 3 && seen.most <= 3, seen);
   await start(page, 'pong', { bonus: 'off' }); await S(page, '(s.serve = 0, s.nextBubble = 0, 1)'); await sleep(200);
   check('bonuses can be switched off', await S(page, 's.bubbles.length === 0'));
 
@@ -362,10 +365,12 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   r = await phone.locator('.game-canvas').boundingBox();
   await swipe(r.x + r.width * 0.1, r.y + r.height * 0.5, r.x + r.width * 0.9, r.y + r.height * 0.5);
   check('finger swipe slices', await S(phone, 's.score === 1'), await S(phone, 's.score'));
-  await start(phone, 'tic-tac-toe', { mode: 'two' });
-  await phone.locator('.cell').nth(4).tap();
-  await sleep(100);
-  check('tap places mark', await S(phone, "s.board[4] === 'X'"), await S(phone, '[s.board, s.turn, GH.app.current.state, GH.app.current.def.id, i.state === s]'));
+  /* A fresh page: Chrome can swallow the click of the first tap that follows raw synthetic swipes. */
+  const tapper = await open({ ...devices['Pixel 7'] });
+  await start(tapper, 'tic-tac-toe', { mode: 'two' });
+  await tapper.locator('.cell').nth(4).tap(); await sleep(150);
+  check('tap places mark', await S(tapper, "s.board[4] === 'X'"));
+  await tapper.context().close();
   await start(phone, 'simon-says');
   await phone.waitForFunction(() => GH.app.current.instance.state.accepting);
   await phone.locator('.simon-pad').nth(await S(phone, 's.sequence[0]')).tap();
@@ -389,7 +394,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('manifest loads without errors', manifest.errors.length === 0 && manifest.url.endsWith('manifest.webmanifest'), manifest.errors);
   const install = (await dev.send('Page.getInstallabilityErrors')).installabilityErrors.filter(e => e.errorId !== 'in-incognito');
   check('browser reports the app as installable', install.length === 0, install);
-  check('icons and share image exist', await app.evaluate(async () => (await Promise.all([...JSON.parse(await (await fetch('manifest.webmanifest')).text()).icons.map(i => i.src), 'assets/icons/apple-touch-icon.png', 'assets/icons/favicon-32.png', 'assets/icons/share.png'].map(u => fetch(u)))).every(r => r.ok)));
+  check('icons and share image exist', await app.evaluate(async () => (await Promise.all([...JSON.parse(await (await fetch('manifest.webmanifest')).text()).icons.map(i => i.src), 'assets/icons/logo-icon-180.png', 'assets/icons/logo-icon-32.png', 'assets/icons/share-2.jpg'].map(u => fetch(u)))).every(r => r.ok)));
   await app.click('#btn-install');
   const installOpen = await app.evaluate(() => document.getElementById('install-help').open || document.querySelectorAll('#install-steps li').length === 0);
   check('install button gives instructions or a prompt', installOpen);

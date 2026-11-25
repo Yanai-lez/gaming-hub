@@ -19,7 +19,8 @@
     life:   { icon: '♥', name: 'חיים נוספים', color: '#ff5d8f', weight: 1 },
     gift:   { icon: '★', name: 'מתנה: נקודות', color: '#7dff6a', weight: 2 }
   };
-  const MAX_BALLS = 5, MAX_LIVES = 5, BUBBLE_R = 28, BUBBLE_TAP = 38, BUBBLE_LIFE = 3.5;
+  const MAX_BALLS = 5, MAX_LIVES = 5, BUBBLE_R = 28, BUBBLE_TAP = 38, BUBBLE_LIFE = 2.2, MAX_BUBBLES = 3, FIRST_BUBBLE = 2;
+  const bubbleGap = () => 1.2 + Math.random() * 1.6;
 
   /* hit: -1 (left tip) .. 1 (right tip). The further from the centre, the flatter the bounce. */
   function bounceVelocity(hit, speed) {
@@ -42,7 +43,7 @@
     const s = {
       score: 0, lives: 3, hits: 0, over: false, serve: 1.2, glow: 0, time: 0,
       paddle: { x: W / 2, w: level.width }, balls: [], speed: level.speed,
-      bubbles: [], nextBubble: 5, effects: {}, shield: false, texts: []
+      bubbles: [], nextBubble: FIRST_BUBBLE, effects: {}, shield: false, texts: []
     };
     /* Pointers that pressed a bubble: they must not drag the paddle along. */
     const tapping = new Set();
@@ -119,7 +120,7 @@
       s.bubbles = s.bubbles.filter(b => b.age < BUBBLE_LIFE);
       if (!bonuses) return;
       s.nextBubble -= dt;
-      if (s.nextBubble <= 0 && s.bubbles.length < 2) { spawnBubble(); s.nextBubble = rand(4.5, 9); }
+      if (s.nextBubble <= 0 && s.bubbles.length < MAX_BUBBLES) { spawnBubble(); s.nextBubble = bubbleGap(); }
     }
 
     function step(ball, dt) {
@@ -163,7 +164,7 @@
       } else {
         /* Ease off a little after a miss. */
         s.speed = Math.max(level.speed, s.speed - 5 * level.step);
-        resetBall(); s.nextBubble = Math.max(s.nextBubble, 3); hud();
+        resetBall(); s.nextBubble = Math.max(s.nextBubble, 1); hud();
       }
     }
 
