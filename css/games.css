@@ -114,3 +114,22 @@ body.in-game { height: 100vh; height: 100dvh; overflow: hidden; overscroll-behav
 .menu-history { width: 100%; text-align: right; }
 .menu-history summary { cursor: pointer; text-align: center; font-weight: 700; padding: 10px; }
 @media (min-width: 900px) { .menu-history { display: none; } .immersive .menu-history { display: block; } }
+
+/* Connect Four: the side whose turn it is stands out (you: blue, opponent: red). */
+.c4 { width: 100%; height: 100%; display: flex; flex-direction: column; }
+.c4-side { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; font-weight: 800; opacity: .45; transition: .3s ease; --side: #2f7dff; }
+.c4-side.top { --side: #ff3b55; }
+.c4-side.active { height: 92px; opacity: 1; font-size: 1.35rem; background: var(--side); box-shadow: 0 0 40px var(--side); }
+.c4-side i { width: 28px; height: 28px; border-radius: 50%; background: #ffd21f; border: 3px solid #fff8; }
+.c4-side.top i { background: #e8202f; }
+.c4-side .btn { min-height: 38px; font-size: .85rem; padding: 0 12px; }
+.c4-mid { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; padding: 8px; }
+.c4-board { width: min(100cqw, 116cqh, 560px); display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px; background: linear-gradient(#1f5fe0, #1440a8); border-radius: 18px; box-shadow: 0 8px 0 #0c2a73; overflow: hidden; }
+.c4-col { display: flex; flex-direction: column; padding: 0; border: 0; background: none; cursor: pointer; }
+.c4-col:hover { background: #ffffff18; }
+.c4-col b { display: block; aspect-ratio: 1; margin: 7%; border-radius: 50%; background: #0a0d1f; box-shadow: inset 0 4px 8px #000a; }
+.c4-col b.p1 { background: radial-gradient(circle at 35% 30%, #fff3a0, #ffd21f 45%, #c99600); }
+.c4-col b.p2 { background: radial-gradient(circle at 35% 30%, #ff9a9a, #e8202f 45%, #96101b); }
+.c4-col b.fall { animation: c4fall .36s cubic-bezier(.45,0,1,1); }
+.c4-col b.win { outline: 4px solid #fff; animation: pulse .5s ease infinite alternate; }
+@keyframes c4fall { from { transform: translateY(calc(var(--fall) * -116%)); } }

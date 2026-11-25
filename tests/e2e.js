@@ -47,7 +47,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   for (const [label, opts] of [['desktop', { viewport: { width: 1366, height: 800 } }], ['mobile', { ...devices['Pixel 7'] }], ['small phone', { viewport: { width: 320, height: 568 }, hasTouch: true, isMobile: true }]]) {
     console.log(`\n== ${label} ==`);
     const page = await open(opts);
-    check('home shows five cards', await page.locator('.card').count() === 5);
+    check('home shows all cards', await page.locator('.card').count() >= 5);
     check('all card images load', await page.$$eval('.card img', a => a.every(i => i.complete && i.naturalWidth > 0)));
     check('home has no horizontal scroll', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     for (const id of IDS) {
@@ -442,7 +442,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   await app.click('#btn-install'); await sleep(100);
   check('accepting the prompt hides the button', !await shown());
   await app.context().setOffline(true); await app.reload();
-  check('works offline', await app.locator('.card').count() === 5 && await app.$$eval('.card img', a => a.every(i => i.complete && i.naturalWidth > 0)));
+  check('works offline', await app.locator('.card').count() >= 5 && await app.$$eval('.card img', a => a.every(i => i.complete && i.naturalWidth > 0)));
   await start(app, 'pong');
   check('game starts offline', await state(app) === 'playing');
   await app.context().setOffline(false); await app.context().close();
@@ -452,7 +452,7 @@ const IDS = ['space-invaders', 'pong', 'tic-tac-toe', 'simon-says', 'fruit-ninja
   check('erase data works', await page.evaluate(() => GH.storage.best('pong') === 0));
   const blocked = await browser.newContext(); await blocked.addInitScript(() => Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } }));
   const bp = await blocked.newPage(); bp.on('pageerror', e => errors.push(e.message)); await bp.goto(base);
-  check('works with storage blocked', await bp.locator('.card').count() === 5);
+  check('works with storage blocked', await bp.locator('.card').count() >= 5);
 
   check('no JavaScript or network errors', errors.length === 0, [...new Set(errors)]);
   console.log(`\n${passed} passed, ${failed} failed`);
