@@ -1,6 +1,6 @@
 # 🎮 Gaming Hub
 
-Seven browser games in one site (Hebrew, right-to-left interface), written in plain HTML, CSS and JavaScript. No build step, no backend, no external files.
+Six browser games in one site (Hebrew, right-to-left interface), written in plain HTML, CSS and JavaScript. No build step, no backend, no external files.
 
 | Game | Highlights |
 |---|---|
@@ -9,7 +9,6 @@ Seven browser games in one site (Hebrew, right-to-left interface), written in pl
 | ❌ Tic-Tac-Toe | Easy (random), Medium (win/block), Hard (Minimax), Challenge (Minimax plus traps), two players, stats |
 | 🧠 Simon Says | Four tones, rising pace, speed setting, practice mode |
 | 🔴 Connect Four | Computer (3 levels) or two players, falling discs, animated wins |
-| 🎳 Bowling | Swipe to throw with spin, pin physics, ten-frame scoring, solo or vs computer |
 | 🍉 Fruit Ninja | Swipe slicing by segment–circle intersection, combos, bombs, timer and lives |
 
 Also: saved high scores and result history, sound effects and music (synthesised in the browser), global mute, fullscreen, pause, touch, mouse and keyboard controls, installable app (works offline) and a logo preview for shared links.

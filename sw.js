@@ -3,8 +3,6 @@
 const VERSION = 'gaming-hub-v10';
 const FILES = [
   './',
-  'js/games/bowling.js?v=9',
-  'assets/images/bowling.svg',
   'js/games/connect-four.js?v=9',
   'assets/images/connect-four.svg',
   'index.html',
