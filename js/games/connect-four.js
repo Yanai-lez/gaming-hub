@@ -61,12 +61,34 @@
 
     function sidesUpdate(message) {
       for (const el of sides) {
-        const p = Number(el.dataset.p), active = !s.over && s.turn === p;
+        const p = Number(el.dataset.p), active = (!s.over || !!winLine(s.board)) && s.turn === p;
+        el.classList.toggle('done', s.over);
         el.classList.toggle('active', active);
-        el.querySelector('span').textContent = message && p === 1 ? message : active ? (two ? `התור של ${names[p]}` : p === 1 ? 'התור שלכם' : 'המחשב חושב…') : names[p];
+        el.querySelector('span').textContent = message && p === 1 ? message : active && !s.over ? (two ? `התור של ${names[p]}` : p === 1 ? 'התור שלכם' : 'המחשב חושב…') : names[p];
       }
     }
+    const board = stage.querySelector('.c4-board'), mid = stage.querySelector('.c4-mid');
+    const clearWin = () => { board.classList.remove('won'); stage.querySelectorAll('.c4-line, .c4-confetti').forEach(x => x.remove()); };
+
+    /* A light beam through the four winning discs, plus confetti when a person wins. */
+    function celebrate(line, party) {
+      board.classList.add('won');
+      const box = board.getBoundingClientRect();
+      const centre = i => { const r = cols[i % C].children[Math.floor(i / C)].getBoundingClientRect(); return [r.x + r.width / 2 - box.x, r.y + r.height / 2 - box.y]; };
+      const [x1, y1] = centre(line[0]), [x2, y2] = centre(line[3]);
+      board.insertAdjacentHTML('beforeend', `<svg class="c4-line" viewBox="0 0 ${box.width} ${box.height}" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" pathLength="1"/></svg>`);
+      if (!party || !GH.storage.settings.effects) return;
+      const colors = ['#ffd21f', '#ff3b55', '#2f7dff', '#3fffd0', '#fff'];
+      for (let i = 0; i < 70; i++) {
+        const bit = document.createElement('em');
+        bit.className = 'c4-confetti';
+        bit.style.cssText = `left:${Math.random() * 100}%;background:${colors[i % 5]};animation-delay:${Math.random() * 0.7}s;animation-duration:${1.4 + Math.random() * 1.4}s;--drift:${Math.random() * 120 - 60}px`;
+        mid.append(bit);
+      }
+    }
+
     function newRound() {
+      clearWin();
       s.timers.forEach(t => scope.cancel(t)); s.timers = [];
       s.board = Array(C * R).fill(0); s.over = false; s.busy = false;
       s.turn = s.round++ % 2 ? 2 : 1;
@@ -91,6 +113,7 @@
       if (line) {
         line.forEach(i => cols[i % C].children[Math.floor(i / C)].classList.add('win'));
         wins[s.turn]++;
+        celebrate(line, two || s.turn === 1);
         streak = s.turn === 1 ? streak + 1 : 0;
       }
       const text = !line ? 'תיקו' : two ? `${names[s.turn]} ניצח!` : s.turn === 1 ? 'ניצחתם!' : 'המחשב ניצח';

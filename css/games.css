@@ -123,13 +123,28 @@ body.in-game { height: 100vh; height: 100dvh; overflow: hidden; overscroll-behav
 .c4-side i { width: 28px; height: 28px; border-radius: 50%; background: #ffd21f; border: 3px solid #fff8; }
 .c4-side.top i { background: #e8202f; }
 .c4-side .btn { min-height: 38px; font-size: .85rem; padding: 0 12px; }
-.c4-mid { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; padding: 8px; }
-.c4-board { width: min(100cqw, 116cqh, 560px); display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px; background: linear-gradient(#1f5fe0, #1440a8); border-radius: 18px; box-shadow: 0 8px 0 #0c2a73; overflow: hidden; }
+.c4-mid { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; padding: 8px; position: relative; overflow: hidden; }
+.c4-board { position: relative; width: min(100cqw, 116cqh, 560px); display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px; background: linear-gradient(#1f5fe0, #1440a8); border-radius: 18px; box-shadow: 0 8px 0 #0c2a73; overflow: hidden; }
 .c4-col { display: flex; flex-direction: column; padding: 0; border: 0; background: none; cursor: pointer; }
 .c4-col:hover { background: #ffffff18; }
 .c4-col b { display: block; aspect-ratio: 1; margin: 7%; border-radius: 50%; background: #0a0d1f; box-shadow: inset 0 4px 8px #000a; }
 .c4-col b.p1 { background: radial-gradient(circle at 35% 30%, #fff3a0, #ffd21f 45%, #c99600); }
 .c4-col b.p2 { background: radial-gradient(circle at 35% 30%, #ff9a9a, #e8202f 45%, #96101b); }
-.c4-col b.fall { animation: c4fall .36s cubic-bezier(.45,0,1,1); }
-.c4-col b.win { outline: 4px solid #fff; animation: pulse .5s ease infinite alternate; }
-@keyframes c4fall { from { transform: translateY(calc(var(--fall) * -116%)); } }
+.c4-col b.fall { animation: c4fall .38s linear; }
+.c4-board.won b:not(.win) { filter: brightness(.45); transition: filter .5s; }
+.c4-col b.win { outline: 4px solid #fff; box-shadow: 0 0 22px 6px #fff9; animation: c4win .55s ease-in-out .25s infinite alternate; }
+.c4-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 0 8px #fff); }
+.c4-line line { stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 1; animation: c4line .6s ease-out both; }
+.c4-confetti { position: absolute; top: -14px; width: 9px; height: 14px; pointer-events: none; animation: c4confetti 2s ease-in both; }
+/* Gravity, then two small bounces. */
+@keyframes c4fall {
+  0% { transform: translateY(calc(var(--fall) * -116%)); animation-timing-function: cubic-bezier(.5,0,1,1); }
+  66% { transform: translateY(0); animation-timing-function: ease-out; }
+  80% { transform: translateY(-18%); animation-timing-function: ease-in; }
+  90% { transform: translateY(0); animation-timing-function: ease-out; }
+  95% { transform: translateY(-5%); }
+}
+@keyframes c4win { to { transform: scale(1.12); } }
+@keyframes c4line { from { stroke-dashoffset: 1; } }
+@keyframes c4confetti { to { transform: translate(var(--drift), 110cqh) rotate(720deg); } }
+.c4-side.bottom.done { opacity: 1; }
