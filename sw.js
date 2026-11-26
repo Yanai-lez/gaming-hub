@@ -1,6 +1,6 @@
 /* Network first, so an update is picked up at once and old and new files never mix.
    The cache is only the offline fallback. Raise VERSION together with the ?v= numbers in index.html. */
-const VERSION = 'gaming-hub-v9';
+const VERSION = 'gaming-hub-v10';
 const FILES = [
   './',
   'js/games/bowling.js?v=9',
